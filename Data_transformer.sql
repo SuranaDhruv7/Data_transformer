@@ -103,7 +103,33 @@ FROM customers
 RIGHT JOIN orders ON customers.CustomerID = orders.CustomerID;
 
 -- 5. Subquery to find customers who have placed orders worth more than the average amount.
+
+SELECT *
+FROM customers
+WHERE CustomerID IN (
+    SELECT CustomerID
+    FROM orders
+    GROUP BY CustomerID
+    HAVING AVG(TotalAmount) > (
+        SELECT AVG(TotalAmount)
+        FROM orders
+    )
+);
+
 -- 6. Subquery to find employees with salaries above the average salary.
+
+SELECT *
+FROM customers
+WHERE CustomerID IN (
+    SELECT CustomerID
+    FROM orders
+    GROUP BY CustomerID
+    HAVING AVG(TotalAmount) > (
+        SELECT AVG(TotalAmount)
+        FROM orders
+    )
+);
+
 -- 7. Extract the year and month from the OrderDate.
 
 SELECT OrderDate,
@@ -146,8 +172,30 @@ SELECT TRIM(Email) AS Trimmed_Email
 FROM customers;
 
 -- 14. Calculate the running total of TotalAmount for each order.
+
+SELECT OrderID, TotalAmount,
+SUM(TotalAmount) OVER (ORDER BY OrderID) AS Running_Total
+FROM orders;
+
 -- 15. Rank orders based on TotalAmount using the RANK() function:
+
+SELECT OrderID, TotalAmount,
+SUM(TotalAmount) OVER (ORDER BY OrderID) AS Running_Total,
+RANK() OVER (ORDER BY TotalAmount DESC) AS Order_Rank
+FROM orders;
+
 -- 16. Assign a discount based on TotalAmount in orders (e.g., > 1000: 10% off, > 500: 5% off).
+
+SELECT OrderID, TotalAmount,
+SUM(TotalAmount) OVER (ORDER BY OrderID) AS Running_Total,
+RANK() OVER (ORDER BY TotalAmount DESC) AS Order_Rank,
+CASE 
+    WHEN TotalAmount > 1000 THEN TotalAmount * 0.9
+    WHEN TotalAmount > 500 THEN TotalAmount * 0.95
+    ELSE TotalAmount
+END AS Discounted_Amount
+FROM orders;
+
 -- 17. Categorize employees salaries as high, medium. or low.
 
 SELECT EmployeeID, FirstName, LastName, Salary,
